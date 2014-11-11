@@ -12,16 +12,24 @@
 
 <div id="div"></div>
 
+<x-for condition="user in windows.data.users">
+    <template>
+        <p>{user.name}</p>
+    </template>
+</x-for>
 
-<x-view name="View">
+
+
+
+<!--x-view name="view">
     <template>
     <p>{name}</p>
     <div class="{class}">{title}</div>
-    <x-for condition="user in users">
+    <x-for repeat="10" condition="user in users">
         <p>{user.name}</p>
     </x-for>
     </template>
-</x-view>
+</x-view-->
 
 <script src="app.js" type="text/javascript"></script>
 </body>
