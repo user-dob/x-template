@@ -1,35 +1,21 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
     <title>&lt;x-for&gt;</title>
-
-    <script src="src/core.js" type="text/javascript"></script>
-    <script src="src/x-view.js" type="text/javascript"></script>
-    <script src="src/x-for.js" type="text/javascript"></script>
-
 </head>
 <body>
 
-<div id="div"></div>
+<div id="tpl">
+    <div class="{name}" >{name}</div>
+    <span id="yml">
+        <div>{title}</div>
+        <div>Hello {user.detail.name}: {age}!</div>
+    </span>
+    <span>{name}</span>
+</div>
 
-<x-for repeat ="users">
-    <template>
-        <p>{user.name}</p>
-    </template>
-</x-for>
 
-
-<!--x-view name="view">
-    <template>
-    <p>{name}</p>
-    <div class="{class}">{title}</div>
-    <x-for repeat="10" condition="user in users">
-        <p>{user.name}</p>
-    </x-for>
-    </template>
-</x-view-->
-
-<script src="app.js" type="text/javascript"></script>
+<script src="dom.js" type="text/javascript"></script>
 </body>
 </html>

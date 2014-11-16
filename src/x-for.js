@@ -6,7 +6,6 @@ var users = [
     {name: 'user 5', age: 1}
 ];
 
-
 (function (window, document, core) {
 
     var element = Object.create(HTMLElement.prototype);
@@ -35,12 +34,12 @@ var users = [
             var node = el.template;
             var item;
 
-            console.log(node)
-
             window[value].forEach(function(user) {
                 item = node.cloneNode(true);
-                item.firstChild.textContent = user.name;
+
+                item.querySelector('p').textContent = user.name;
                 fragment.appendChild(item);
+
             })
 
             //var node = document.importNode(el.template, true);
@@ -57,8 +56,7 @@ var users = [
         var el = this;
         while (el.firstChild) {
             el.removeChild(el.firstChild);
-        }
-        ;
+        };
     };
 
     var XFor = document.registerElement('x-for', {
@@ -66,3 +64,5 @@ var users = [
     });
 
 })(window, document, core);
+
+
