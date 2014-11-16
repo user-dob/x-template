@@ -1,3 +1,8 @@
+document.registerElement('x-for', {
+    prototype: Object.create(HTMLElement.prototype)
+});
+
+
 
 function bind(el, data) {
 
@@ -6,43 +11,7 @@ function bind(el, data) {
     function parse(el) {
 
         if(el.nodeType === 3) {
-
-            var empty = true;
-            var tpl = {};
-            var replace = function(text) {
-                return text.replace(/\{([^{}]*)\}/g, function(math, p) {
-                    values[p] = values[p] || [];
-                    values[p].push(el.parentNode);
-                    empty = false;
-                    return '"+context.' + p + '+"';
-                })
-            };
-
-            tpl.textContent = replace(el.textContent);
-            tpl.attributes = {};
-
-            var attributes = el.parentNode.attributes;
-            for(var j = 0; j<attributes.length; j++) {
-                var attr = attributes[j];
-                tpl.attributes[attr.name] = replace(attr.value);
-            }
-
-            if(!empty) {
-
-                var body = [];
-                body.push('el.textContent = "' + tpl.textContent + '"');
-
-                for(var j = 0; j<attributes.length; j++) {
-                    var attr = attributes[j];
-                    body.push('el.parentNode.setAttribute("' + attr.name + '", "' + tpl.attributes[attr.name] + '")');
-                };
-
-                var render = new Function('el', 'context', body.join(';'));
-
-                el.parentNode.addEventListener('bind', function(event) {
-                    render(el, event.detail);
-                }, false);
-            };
+            parseEl(el);
         }
 
         var nodes = el.childNodes;
@@ -51,6 +20,45 @@ function bind(el, data) {
             parse(nodes[i]);
         };
     };
+
+    function parseEl(el) {
+        var empty = true;
+        var tpl = {};
+        var replace = function(text) {
+            return text.replace(/\{([^{}]*)\}/g, function(math, p) {
+                values[p] = values[p] || [];
+                values[p].push(el.parentNode);
+                empty = false;
+                return '"+context.' + p + '+"';
+            })
+        };
+
+        tpl.textContent = replace(el.textContent);
+        tpl.attributes = {};
+
+        var attributes = el.parentNode.attributes;
+        for(var j = 0; j<attributes.length; j++) {
+            var attr = attributes[j];
+            tpl.attributes[attr.name] = replace(attr.value);
+        }
+
+        if(!empty) {
+
+            var body = [];
+            body.push('el.textContent = "' + tpl.textContent + '"');
+
+            for(var j = 0; j<attributes.length; j++) {
+                var attr = attributes[j];
+                body.push('el.parentNode.setAttribute("' + attr.name + '", "' + tpl.attributes[attr.name] + '")');
+            };
+
+            var render = new Function('el', 'context', body.join(';'));
+
+            el.parentNode.addEventListener('bind', function(event) {
+                render(el, event.detail);
+            }, false);
+        };
+    }
 
     function buildObject(data, o, path) {
 
@@ -63,26 +71,28 @@ function bind(el, data) {
                         el.dispatchEvent(new CustomEvent('bind', {detail: data}));
                     })
                 };
+            };
+
+            switch (typeof o[name]) {
+                case 'object':
+                    buildObject(data, o[name], myPath);
+                    break;
+                default :
+                    o['_' + name] = o[name];
+
+                    dispatchEvent();
+
+                    Object.defineProperty(o, name, {
+                        get: function() {
+                            return this['_' + name];
+                        },
+                        set: function(value) {
+                            this['_' + name] = value;
+                            dispatchEvent();
+                        }
+                    });
+                    break;
             }
-
-            if(typeof o[name] === 'object') {
-                buildObject(data, o[name], myPath);
-            } else {
-                o['_' + name] = o[name];
-
-                dispatchEvent();
-
-                Object.defineProperty(o, name, {
-                    get: function() {
-                        return this['_' + name];
-                    },
-                    set: function(value) {
-                        this['_' + name] = value;
-                        dispatchEvent();
-                    }
-                });
-            }
-
         })
     };
 
@@ -101,7 +111,20 @@ var data = {
     cls: 'class',
     age: 34,
     name: 'Name',
-    title: 'Title'
+    title: 'Title',
+    //users: [
+    //    {name: 'user 1'},
+    //    {name: 'user 2'},
+    //    {name: 'user 3'},
+    //    {name: 'user 4'}
+    //]
 };
 
 bind(el, data);
+
+Object.observe(data.user.detail, function(changes){
+    changes.forEach(function(change) {
+        console.log(change);
+    });
+
+});
