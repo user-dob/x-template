@@ -1,26 +1,23 @@
-data = {
-    users: [
-        {name: 'user 1', age: 1},
-        {name: 'user 2', age: 1},
-        {name: 'user 3', age: 1},
-        {name: 'user 4', age: 1},
-        {name: 'user 5', age: 1}
-    ]
-};
+var users = [
+    {name: 'user 1', age: 1},
+    {name: 'user 2', age: 1},
+    {name: 'user 3', age: 1},
+    {name: 'user 4', age: 1},
+    {name: 'user 5', age: 1}
+];
 
-
-(function(window, document) {
+(function (window, document, core) {
 
     var element = Object.create(HTMLElement.prototype);
 
-    element.createdCallback = function() {
+    element.createdCallback = function () {
         var el = this;
         el.template = el.querySelector('template').content;
 
         console.log(el.parentNode)
     };
 
-    element.attachedCallback = function() {
+    element.attachedCallback = function () {
         var el = this;
 
         console.log(el)
@@ -28,50 +25,42 @@ data = {
         el.compile();
     };
 
-    element.attributeChangedCallback = function(attr, oldVal, newVal) {
+    element.attributeChangedCallback = function (attr, oldVal, newVal) {
         if (attr === 'repeat') {
             this.compile();
         }
     };
 
-    element.compile = function() {
+    element.compile = function () {
         var el = this;
-        if (el.hasAttribute('condition')) {
-            var value = el.getAttribute('condition');
-            var itemName, itemsName;
-
-            value.replace(/\s*(\w+)\sin\s([\w\.]+)\s*/g, function(math, item, items) {
-                itemName = item;
-                itemsName = items;
-            });
-
+        if (el.hasAttribute('repeat')) {
+            var value = el.getAttribute('repeat');
             var fragment = document.createDocumentFragment();
-            var node = document.importNode(el.template, true);
+            var node = el.template;
+            var item;
 
-            fragment.appendChild(node)
+            window[value].forEach(function(user) {
+                item = node.cloneNode(true);
+
+                item.querySelector('p').textContent = user.name;
+                fragment.appendChild(item);
+
+            })
+
+            //var node = document.importNode(el.template, true);
+            //for(var i=0; i<value; i++) {
+            //    fragment.appendChild(node.cloneNode(true));
+            //};
 
             el.clear();
             el.appendChild(fragment);
-
-            console.log(itemName, itemsName)
-
-
-//            var node = document.importNode(el.template, true);
-//            var fragment = document.createDocumentFragment();
-//
-//            for(var i=0; i<value; i++) {
-//                fragment.appendChild(node.cloneNode(true));
-//            };
-//
-//            el.clear();
-//            el.appendChild(fragment);
         };
     };
 
-    element.clear = function() {
+    element.clear = function () {
         var el = this;
-        while ( el.firstChild ) {
-            el.removeChild( el.firstChild );
+        while (el.firstChild) {
+            el.removeChild(el.firstChild);
         };
     };
 
@@ -79,4 +68,6 @@ data = {
         prototype: element
     });
 
-})(window, document);
+})(window, document, core);
+
+
