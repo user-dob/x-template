@@ -16,10 +16,15 @@ data = {
     element.createdCallback = function() {
         var el = this;
         el.template = el.querySelector('template').content;
+
+        console.log(el.parentNode)
     };
 
     element.attachedCallback = function() {
         var el = this;
+
+        console.log(el)
+
         el.compile();
     };
 
@@ -42,6 +47,8 @@ data = {
 
             var fragment = document.createDocumentFragment();
             var node = document.importNode(el.template, true);
+
+            fragment.appendChild(node)
 
             el.clear();
             el.appendChild(fragment);

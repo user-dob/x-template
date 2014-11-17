@@ -4,14 +4,14 @@
 
     element.createdCallback = function() {
         var el = this;
-        el.template = el.querySelector('template').content;
+        //el.template = el.querySelector('template').content;
     };
 
     element.attachedCallback = function() {
         var el = this;
         el.clear();
-        el.appendChild(el.template);
-        console.log( el.querySelector('x-for') )
+        //el.appendChild(el.template);
+        //console.log( el.querySelector('x-for') )
     };
 
     element.attributeChangedCallback = function(attr, oldVal, newVal) {
