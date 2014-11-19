@@ -56,8 +56,15 @@ var data = {
     cls: 'class'
 };
 
-bind(el, data);
+//bind(el, data);
 
+var textNode = document.querySelector('#span').nextSibling
 
-console.log(document.querySelector('#tpl').childNodes)
+textNode.addEventListener('bind', function(e) {
+    console.log(e);
+})
+
+textNode.dispatchEvent(new CustomEvent('bind'));
+
+console.log(textNode);
 

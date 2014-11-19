@@ -52,11 +52,12 @@ function bind(el, data) {
                 body.push('el.parentNode.setAttribute("' + attr.name + '", "' + tpl.attributes[attr.name] + '")');
             };
 
-            var render = new Function('el', 'context', body.join(';'));
+            var render = new Function('el', 'context', body.join('\n'));
 
             el.parentNode.addEventListener('bind', function(event) {
                 render(el, event.detail);
-            }, false);
+                console.log(el);
+            }, true);
         };
     }
 
@@ -111,13 +112,7 @@ var data = {
     cls: 'class',
     age: 34,
     name: 'Name',
-    title: 'Title',
-    //users: [
-    //    {name: 'user 1'},
-    //    {name: 'user 2'},
-    //    {name: 'user 3'},
-    //    {name: 'user 4'}
-    //]
+    title: 'Title'
 };
 
 bind(el, data);
