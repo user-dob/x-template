@@ -1,4 +1,6 @@
-
+document.registerElement('x-for', {
+    prototype: Object.create(HTMLElement.prototype)
+});
 
 function bind(el) {
 
@@ -22,7 +24,58 @@ function bind(el) {
         }
     }
 
+    function parseElementXFor(el) {
+
+        var condition = el.getAttribute('condition');
+        var item, items;
+
+        condition.replace(/\s*(\w+)\sin\s([\w\.]+)\s*/g, function(math, p1, p2) {
+            item = p1;
+            items = p2;
+        });
+
+        //var render = function(el, context) {
+        //    var nodes = el.childNodes;
+        //
+        //    context.users.forEach(function(user) {
+        //        var frag = document.createDocumentFragment();
+        //        for(var i=0; i<nodes.length; i++) {
+        //            frag.appendChild(nodes[i].cloneNode(true));
+        //        };
+        //
+        //        el.appendChild(frag);
+        //
+        //        bind(frag, user);
+        //    })
+        //}
+
+
+
+        var body = [
+            'var nodes = el.childNodes;',
+            'context.' + items + '.forEach(function(' + item + ') {',
+                'var frag = document.createDocumentFragment();',
+                'for(var i=0; i<nodes.length; i++) {',
+                    'frag.appendChild(nodes[i].cloneNode(true));',
+                '};',
+                'el.appendChild(frag);',
+                'bind(frag, ' + item + ');',
+            '})'
+        ];
+
+        var render = new Function('el', 'context', body.join('\n'));
+
+        el.addEventListener('bind', function(event) {
+            render(el, event.detail);
+        }, true);
+    }
+
     function parseElementNode(el) {
+
+        if(el.nodeName === 'X-FOR') {
+            parseElementXFor(el);
+            return;
+        }
 
         var empty = true;
         var tpl = {};
@@ -124,7 +177,13 @@ var data = {
     cls: 'class',
     user: {
         name: 'Jon'
-    }
+    },
+    users: [
+        {name: 'user 1'},
+        {name: 'user 2'},
+        {name: 'user 3'},
+        {name: 'user 4'}
+    ]
 };
 
 bind(el, data);
