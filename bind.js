@@ -2,7 +2,7 @@ document.registerElement('x-for', {
     prototype: Object.create(HTMLElement.prototype)
 });
 
-function bind(el) {
+function bind(el, data) {
 
     var values = {};
 
@@ -34,40 +34,29 @@ function bind(el) {
             items = p2;
         });
 
-        //var render = function(el, context) {
-        //    var nodes = el.childNodes;
-        //
-        //    context.users.forEach(function(user) {
-        //        var frag = document.createDocumentFragment();
-        //        for(var i=0; i<nodes.length; i++) {
-        //            frag.appendChild(nodes[i].cloneNode(true));
-        //        };
-        //
-        //        el.appendChild(frag);
-        //
-        //        bind(frag, user);
-        //    })
-        //}
+        var frag = document.createDocumentFragment();
 
-
+        var tpl = el.cloneNode(true);
 
         var body = [
-            'var nodes = el.childNodes;',
+            'var frag = document.createDocumentFragment();',
+            'while(el.firstChild) {el.removeChild(el.firstChild);}',
             'context.' + items + '.forEach(function(' + item + ') {',
-                'var frag = document.createDocumentFragment();',
-                'for(var i=0; i<nodes.length; i++) {',
-                    'frag.appendChild(nodes[i].cloneNode(true));',
-                '};',
-                'el.appendChild(frag);',
-                'bind(frag, ' + item + ');',
-            '})'
+                'var itemEl = tpl.cloneNode(true);',
+                'frag.appendChild(itemEl);',
+                'bind(itemEl, ' + item + ');',
+            '})',
+            'el.appendChild(frag);',
         ];
 
-        var render = new Function('el', 'context', body.join('\n'));
+        values[items] = values[items] || [];
+        values[items].push(el);
+
+        var render = new Function('el', 'tpl', 'context', body.join('\n'));
 
         el.addEventListener('bind', function(event) {
-            render(el, event.detail);
-        }, true);
+            render(el, tpl, event.detail);
+        }, false);
     }
 
     function parseElementNode(el) {
@@ -108,7 +97,7 @@ function bind(el) {
 
             el.addEventListener('bind', function(event) {
                 render(el, event.detail);
-            }, true);
+            }, false);
         };
     }
 
@@ -158,7 +147,7 @@ function bind(el) {
         Object.getOwnPropertyNames(o).forEach(function(name) {
             var myPath = path ? path + '.' + name : name;
 
-            if(typeof o[name] === 'object') {
+            if((typeof o[name] === 'object') && !Array.isArray(o[name])) {
                 parseData(data, o[name], myPath);
             } else {
                 dispatchEvent(myPath, data);
