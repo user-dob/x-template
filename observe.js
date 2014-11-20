@@ -56,17 +56,15 @@ var data = {
     cls: 'class'
 };
 
-bind(el, data);
+//bind(el, data);
 
+var textNode = document.querySelector('#span').nextSibling
 
-//console.log(document.querySelector('#tpl').childNodes)
+textNode.addEventListener('bind', function(e) {
+    console.log(e);
+})
 
-document.querySelector('#span').addEventListener('click', function(event) {
-    console.log(event);
-}, true)
+textNode.dispatchEvent(new CustomEvent('bind'));
 
+console.log(textNode);
 
-//document.querySelector('#tpl').dispatchEvent(new CustomEvent('bind', {
-//    bubbles : true,
-//    cancelable : true
-//}));

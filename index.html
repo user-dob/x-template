@@ -6,20 +6,32 @@
 </head>
 <body>
 
+<<<<<<< HEAD
 <div id="div"></div>
 
 <div id="el" class="{cls}">{name} : {title}</div>
 
+=======
+>>>>>>> 4945526bb56075102f25e002d8c1ebe12b74162d
 <div id="tpl">
-    <span class="span">{name}</span>
+    <span class="{title}">{name}</span>
     <span>{name}</span>
     <span>{name}</span>
+    <span id="span"></span>
+    {user.name}: {title}
     <div>
+<<<<<<< HEAD
         <span id="span">{name}</span>
+=======
+        <span>{title}</span>
+>>>>>>> 4945526bb56075102f25e002d8c1ebe12b74162d
     </div>
+    <x-for condition="user in users">
+        <span>{user.name}</span>
+    </x-for>
 </div>
 
 
-<script src="observe.js" type="text/javascript"></script>
+<script src="bind.js" type="text/javascript"></script>
 </body>
 </html>
