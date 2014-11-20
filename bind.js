@@ -20,6 +20,10 @@ function bind(el, data) {
                     parseElementXCode(el);
                     break;
 
+                case 'X-IF':
+                    parseElementXIf(el);
+                    break;
+
                 default:
                     parseElementNode(el);
             }
@@ -29,6 +33,17 @@ function bind(el, data) {
         for(var i=0; i<nodes.length; i++) {
             parseEl(nodes[i]);
         }
+    }
+
+    function parseElementXIf(el) {
+        var condition = el.getAttribute('condition');
+        var o ={};
+
+        var body = []
+
+        o.condition = new Function('data', body.join('\n'));
+
+        console.log(o.condition())
     }
 
     function parseElementXCode(el) {
