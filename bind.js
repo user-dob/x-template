@@ -35,6 +35,7 @@ function bind(el, data) {
         });
 
         var tpl = el.cloneNode(true).childNodes;
+        el = el.parentNode;
 
         var body = [
             'while(el.firstChild) {el.removeChild(el.firstChild);}',
@@ -59,8 +60,6 @@ function bind(el, data) {
         el.addEventListener('bind', function(event) {
             render(el, tpl, event.detail);
         }, false);
-
-        //render(el, tpl, {});
     }
 
     function parseElementNode(el) {
@@ -172,8 +171,8 @@ var data = {
         name: 'Jon'
     },
     users: [
-        {name: 'user 1'},
-        {name: 'user 2'},
+        {name: 'user 1', posts: [ {title: 'tile 1'}, {title: 'tile 1'} ]},
+        {name: 'user 2', posts: [ {title: 'tile 3'}, {title: 'tile 4'} ]},
         {name: 'user 3'},
         {name: 'user 4'}
     ]

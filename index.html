@@ -19,8 +19,16 @@
     <ul>
         <x-for condition="user in users">
             <li>{user.name}</li>
+            <ol>
+                <x-for condition="post in user.posts">
+                    <li>{post.title}</li>
+                </x-for>
+            </ol>
         </x-for>
     </ul>
+    <x-for condition="item in items">
+        <li>{item.name}</li>
+    </x-for>
 </div>
 
 
