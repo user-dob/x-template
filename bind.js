@@ -35,6 +35,9 @@ function bind(el, data) {
         });
 
         var tpl = el.cloneNode(true).childNodes;
+        while(el.firstChild) {el.removeChild(el.firstChild);}
+
+        // bind
         var body = [
             'while(el.firstChild) {el.removeChild(el.firstChild);}',
             'if(Array.isArray(context.' + items + ')) {',
@@ -58,6 +61,63 @@ function bind(el, data) {
         el.addEventListener('bind', function(event) {
             render(el, tpl, event.detail);
         }, false);
+
+        // bind.push
+        var body = [
+            'if(Array.isArray(context)) {',
+                'context.forEach(function(' + item + ') {',
+                    'var frag = document.createDocumentFragment();',
+                    'for(var i=0; i<tpl.length; i++) {',
+                        'frag.appendChild(tpl[i].cloneNode(true));',
+                    '}',
+                    'var o = {"' + item + '": ' + item + '}',
+                    'bind(frag, o);',
+                    'el.appendChild(frag);',
+                '})',
+            '}'
+        ];
+
+        var renderPush = new Function('el', 'tpl', 'context', body.join('\n'));
+
+        el.addEventListener('bind.push', function(event) {
+            renderPush(el, tpl, event.detail);
+        }, false);
+
+        // bind.shift
+        var body = [
+            'el.removeChild(el.firstChild)'
+        ];
+
+        var renderShift = new Function('el', 'tpl', 'context', body.join('\n'));
+
+        el.addEventListener('bind.shift', function(event) {
+            renderShift(el, tpl, event.detail);
+        }, false);
+
+        // bind.pop
+        var body = [
+            'el.removeChild(el.lastChild)'
+        ];
+
+        var renderPop = new Function('el', 'tpl', 'context', body.join('\n'));
+
+        el.addEventListener('bind.pop', function(event) {
+            renderPop(el, tpl, event.detail);
+        }, false);
+
+    }
+
+    function replace(text, el) {
+        var empty = true;
+        text = text.replace(/[\t\n\r]*/g, '');
+        text = text.replace(/\{([^{}]*)\}/g, function(math, p) {
+            values[p] = values[p] || [];
+            values[p].push(el);
+            empty = false;
+            return '"+context.' + p + '+"';
+        });
+
+        return empty ? null : text;
     }
 
     function parseElementNode(el) {
@@ -67,35 +127,20 @@ function bind(el, data) {
             return;
         }
 
-        var empty = true;
-        var tpl = {};
-        var replace = function(text) {
-            text = text.replace(/[\t\n\r]*/g, '');
-            return text.replace(/\{([^{}]*)\}/g, function(math, p) {
-                values[p] = values[p] || [];
-                values[p].push(el);
-                empty = false;
-                return '"+context.' + p + '+"';
-            })
-        };
-
         var attributes = el.attributes;
+        var tpl = {};
+        var body = [];
+
         for(var j = 0; j<attributes.length; j++) {
             var attr = attributes[j];
-            tpl[attr.name] = replace(attr.value);
+            tpl[attr.name] = replace(attr.value, el);
+            if(tpl[attr.name]) {
+                body.push('el.setAttribute("' + attr.name + '", "' + tpl[attr.name] + '")');
+            }
         };
 
-        if(!empty) {
-
-            var body = [];
-
-            for(var j = 0; j<attributes.length; j++) {
-                var attr = attributes[j];
-                body.push('el.setAttribute("' + attr.name + '", "' + tpl[attr.name] + '")');
-            };
-
+        if(body.length) {
             var render = new Function('el', 'context', body.join('\n'));
-
             el.addEventListener('bind', function(event) {
                 render(el, event.detail);
             }, false);
@@ -103,21 +148,9 @@ function bind(el, data) {
     }
 
     function parseTextNode(el) {
+        var tpl = replace(el.textContent, el);
 
-        var empty = true;
-        var replace = function(text) {
-            text = text.replace(/[\t\n\r]*/g, '');
-            return text.replace(/\{([^{}]*)\}/g, function(math, p) {
-                values[p] = values[p] || [];
-                values[p].push(el);
-                empty = false;
-                return '"+context.' + p + '+"';
-            })
-        };
-
-        var tpl = replace(el.textContent);
-
-        if(!empty) {
+        if(tpl) {
             var render = new Function('el', 'context', 'el.textContent = "' + tpl + '"');
             el.addEventListener('bind', function(event) {
                 render(el, event.detail);
@@ -125,12 +158,16 @@ function bind(el, data) {
         };
     };
 
-    function dispatchEvent(path, data) {
+    function dispatchEvent(path, data, eventName) {
         if(values[path]) {
             values[path].forEach(function(el) {
-                el.dispatchEvent(new CustomEvent('bind', {detail: data}));
+                el.dispatchEvent(new CustomEvent(eventName || 'bind', {detail: data}));
             })
         }
+    }
+
+    function _typeof(o) {
+        return ({}).toString.call(o).match(/\s([a-zA-Z]+)/)[1].toLowerCase();
     }
 
     function parseData(data, o, path) {
@@ -148,10 +185,48 @@ function bind(el, data) {
         Object.getOwnPropertyNames(o).forEach(function(name) {
             var myPath = path ? path + '.' + name : name;
 
-            if((typeof o[name] === 'object') && !Array.isArray(o[name])) {
-                parseData(data, o[name], myPath);
-            } else {
-                dispatchEvent(myPath, data);
+            switch (_typeof(o[name])) {
+                case 'object':
+                    parseData(data, o[name], myPath);
+                    break;
+
+                case 'array':
+                    /*
+                    Array.observe(o[name], function(changes) {
+                        changes.forEach(function(change) {
+                            switch (change.type) {
+                                case 'splice':
+                                    if(change.addedCount) {
+                                        var data = change.object.splice(change.index, change.addedCount);
+                                        dispatchEvent(myPath, data, 'bind.push');
+                                    } else {
+                                        if(change.index) {
+                                            dispatchEvent(myPath, data, 'bind.shift');
+                                        }
+                                        if(change.index === change.object.length) {
+                                            dispatchEvent(myPath, data, 'bind.pop');
+                                        }
+                                    }
+                                    break;
+
+                                case 'update':
+                                    break;
+
+                                case 'delete':
+                                    break;
+                            }
+
+                            console.log(change)
+                        })
+                    });
+                    */
+
+                    dispatchEvent(myPath, data);
+                    break;
+
+                default :
+                    dispatchEvent(myPath, data);
+                    break;
             }
         })
     }
@@ -176,4 +251,16 @@ var data = {
     ]
 };
 
+data.users.push({name: 'user 5'});
+
 bind(el, data);
+
+data.users.push({name: 'user 6'});
+
+var a = [1,2,3];
+
+Array.observe(a, function(changes) {
+    changes.forEach(function(change) {
+        console.log(change)
+    })
+});
