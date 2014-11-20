@@ -34,18 +34,21 @@ function bind(el, data) {
             items = p2;
         });
 
-        var tpl = el.cloneNode(true);
+        var tpl = el.cloneNode(true).childNodes;
 
         var body = [
-            'var frag = document.createDocumentFragment();',
             'while(el.firstChild) {el.removeChild(el.firstChild);}',
-            'context.' + items + '.forEach(function(' + item + ') {',
-                'var itemEl = tpl.cloneNode(true);',
-                'frag.appendChild(itemEl);',
-                'var o = {"' + item + '": ' + item + '}',
-                'bind(itemEl, o);',
-            '})',
-            'el.appendChild(frag);',
+            'if(Array.isArray(context.' + items + ')) {',
+                'context.' + items + '.forEach(function(' + item + ') {',
+                    'var frag = document.createDocumentFragment();',
+                    'for(var i=0; i<tpl.length; i++) {',
+                        'frag.appendChild(tpl[i].cloneNode(true));',
+                    '}',
+                    'var o = {"' + item + '": ' + item + '}',
+                    'bind(frag, o);',
+                    'el.appendChild(frag);',
+                '})',
+            '}',
         ];
 
         values[items] = values[items] || [];
@@ -56,6 +59,8 @@ function bind(el, data) {
         el.addEventListener('bind', function(event) {
             render(el, tpl, event.detail);
         }, false);
+
+        //render(el, tpl, {});
     }
 
     function parseElementNode(el) {
