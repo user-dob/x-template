@@ -1,6 +1,6 @@
-document.registerElement('x-for', {
-    prototype: Object.create(HTMLElement.prototype)
-});
+//document.registerElement('x-for', {
+//    prototype: Object.create(HTMLElement.prototype)
+//});
 
 function bind(el, data) {
 
@@ -34,8 +34,6 @@ function bind(el, data) {
             items = p2;
         });
 
-        var frag = document.createDocumentFragment();
-
         var tpl = el.cloneNode(true);
 
         var body = [
@@ -44,7 +42,8 @@ function bind(el, data) {
             'context.' + items + '.forEach(function(' + item + ') {',
                 'var itemEl = tpl.cloneNode(true);',
                 'frag.appendChild(itemEl);',
-                'bind(itemEl, ' + item + ');',
+                'var o = {"' + item + '": ' + item + '}',
+                'bind(itemEl, o);',
             '})',
             'el.appendChild(frag);',
         ];
