@@ -59,5 +59,14 @@ var data = {
 bind(el, data);
 
 
-console.log(document.querySelector('#tpl').childNodes)
+//console.log(document.querySelector('#tpl').childNodes)
 
+document.querySelector('#span').addEventListener('click', function(event) {
+    console.log(event);
+}, true)
+
+
+//document.querySelector('#tpl').dispatchEvent(new CustomEvent('bind', {
+//    bubbles : true,
+//    cancelable : true
+//}));
