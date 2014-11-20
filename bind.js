@@ -1,7 +1,3 @@
-//document.registerElement('x-for', {
-//    prototype: Object.create(HTMLElement.prototype)
-//});
-
 function bind(el, data) {
 
     var values = {};
@@ -10,18 +6,36 @@ function bind(el, data) {
     parseData(data);
 
     function parseEl(el) {
-        if(el.nodeType === window.Node.TEXT_NODE) {
+        if(el.nodeType === document.TEXT_NODE) {
             parseTextNode(el);
         }
 
-        if(el.nodeType === window.Node.ELEMENT_NODE) {
-            parseElementNode(el);
+        if(el.nodeType === document.ELEMENT_NODE) {
+            switch (el.nodeName) {
+                case 'X-FOR':
+                    parseElementXFor(el);
+                    break;
+
+                case 'X-CODE':
+                    parseElementXCode(el);
+                    break;
+
+                default:
+                    parseElementNode(el);
+            }
         }
 
         var nodes = el.childNodes;
         for(var i=0; i<nodes.length; i++) {
             parseEl(nodes[i]);
         }
+    }
+
+    function parseElementXCode(el) {
+        var code = el.firstChild.textContent;
+        while(el.firstChild) {el.removeChild(el.firstChild);}
+        var render = new Function('scope', code);
+        render(data);
     }
 
     function parseElementXFor(el) {
@@ -121,12 +135,6 @@ function bind(el, data) {
     }
 
     function parseElementNode(el) {
-
-        if(el.nodeName === 'X-FOR') {
-            parseElementXFor(el);
-            return;
-        }
-
         var attributes = el.attributes;
         var tpl = {};
         var body = [];
