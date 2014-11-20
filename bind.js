@@ -35,8 +35,6 @@ function bind(el, data) {
         });
 
         var tpl = el.cloneNode(true).childNodes;
-        el = el.parentNode;
-
         var body = [
             'while(el.firstChild) {el.removeChild(el.firstChild);}',
             'if(Array.isArray(context.' + items + ')) {',
