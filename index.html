@@ -6,6 +6,8 @@
 </head>
 <body>
 
+<div id="id"></div>
+
 <div id="tpl">
     <span class="{title}">{name}</span>
     <span>{name}</span>
@@ -18,6 +20,9 @@
     </div>
     <ul>
         <x-for condition="user in users">
+            <x-code>
+                user.name = user.name + ' ?'
+            </x-code>
             <li>{user.name}</li>
             <ol>
                 <x-for condition="post in user.posts">
@@ -30,13 +35,13 @@
         <li>{item.name}</li>
     </x-for>
     <x-code>
-        console.log(scope.name);
+        var i = name;
+        console.log(name, title);
     </x-code>
 
-    <x-if condition="name == 'Name'">
+    <x-if condition="user.name == 'user 2'">
         <h1>{name}</h1>
     </x-if>
-
 </div>
 
 

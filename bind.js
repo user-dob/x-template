@@ -2,58 +2,68 @@ function bind(el, data) {
 
     var values = {};
 
-    parseEl(el);
+    parseEl(el, data);
     parseData(data);
 
-    function parseEl(el) {
+    function parseEl(el, data) {
         if(el.nodeType === document.TEXT_NODE) {
-            parseTextNode(el);
+            parseTextNode(el, data);
         }
 
         if(el.nodeType === document.ELEMENT_NODE) {
             switch (el.nodeName) {
                 case 'X-FOR':
-                    parseElementXFor(el);
+                    parseElementXFor(el, data);
                     break;
 
                 case 'X-CODE':
-                    parseElementXCode(el);
+                    parseElementXCode(el, data);
                     break;
 
                 case 'X-IF':
-                    parseElementXIf(el);
+                    parseElementXIf(el, data);
                     break;
 
                 default:
-                    parseElementNode(el);
+                    parseElementNode(el, data);
             }
         }
 
         var nodes = el.childNodes;
         for(var i=0; i<nodes.length; i++) {
-            parseEl(nodes[i]);
+            parseEl(nodes[i], data);
         }
     }
 
-    function parseElementXIf(el) {
+    function parseElementXIf(el, data) {
         var condition = el.getAttribute('condition');
-        var o ={};
 
-        var body = []
+        condition = new Function('data', [
+            'for(var i in data) {',
+                'eval("var " + i + " = data[i]")',
+            '}',
+            'return ' + condition
+        ].join('\n'));
 
-        o.condition = new Function('data', body.join('\n'));
-
-        console.log(o.condition())
+        console.log(condition(data))
     }
 
-    function parseElementXCode(el) {
+    function parseElementXCode(el, data) {
         var code = el.firstChild.textContent;
         while(el.firstChild) {el.removeChild(el.firstChild);}
-        var render = new Function('scope', code);
+
+        var body = [
+            'for(var i in data) {',
+                'eval("var " + i + " = data[i]")',
+            '}',
+            code
+        ];
+
+        var render = new Function('data', body.join('\n'));
         render(data);
     }
 
-    function parseElementXFor(el) {
+    function parseElementXFor(el, data) {
 
         var condition = el.getAttribute('condition');
         var item, items;
@@ -66,8 +76,10 @@ function bind(el, data) {
         var tpl = el.cloneNode(true).childNodes;
         while(el.firstChild) {el.removeChild(el.firstChild);}
 
-        // bind
-        var body = [
+        values[items] = values[items] || [];
+        values[items].push(el);
+
+        var render = new Function('el', 'tpl', 'context', [
             'while(el.firstChild) {el.removeChild(el.firstChild);}',
             'if(Array.isArray(context.' + items + ')) {',
                 'context.' + items + '.forEach(function(' + item + ') {',
@@ -79,13 +91,8 @@ function bind(el, data) {
                     'bind(frag, o);',
                     'el.appendChild(frag);',
                 '})',
-            '}',
-        ];
-
-        values[items] = values[items] || [];
-        values[items].push(el);
-
-        var render = new Function('el', 'tpl', 'context', body.join('\n'));
+            '}'
+        ].join('\n'));
 
         el.addEventListener('bind', function(event) {
             render(el, tpl, event.detail);
@@ -149,7 +156,7 @@ function bind(el, data) {
         return empty ? null : text;
     }
 
-    function parseElementNode(el) {
+    function parseElementNode(el, data) {
         var attributes = el.attributes;
         var tpl = {};
         var body = [];
@@ -170,7 +177,7 @@ function bind(el, data) {
         };
     }
 
-    function parseTextNode(el) {
+    function parseTextNode(el, data) {
         var tpl = replace(el.textContent, el);
 
         if(tpl) {
@@ -214,7 +221,6 @@ function bind(el, data) {
                     break;
 
                 case 'array':
-                    /*
                     Array.observe(o[name], function(changes) {
                         changes.forEach(function(change) {
                             switch (change.type) {
@@ -239,10 +245,9 @@ function bind(el, data) {
                                     break;
                             }
 
-                            console.log(change)
+                            //console.log(change)
                         })
                     });
-                    */
 
                     dispatchEvent(myPath, data);
                     break;
@@ -274,16 +279,6 @@ var data = {
     ]
 };
 
-data.users.push({name: 'user 5'});
-
 bind(el, data);
 
-data.users.push({name: 'user 6'});
 
-var a = [1,2,3];
-
-Array.observe(a, function(changes) {
-    changes.forEach(function(change) {
-        console.log(change)
-    })
-});
